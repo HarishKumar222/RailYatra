@@ -21,7 +21,6 @@ cd frontend && npm run dev
 **Demo accounts:**
 | Role  | Email                    | Password   |
 |-------|--------------------------|------------|
-| Admin | admin@railyatra.com      | Admin@123  |
 | User  | demo@railyatra.com       | Demo@1234  |
 
 ---
