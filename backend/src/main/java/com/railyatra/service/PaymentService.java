@@ -91,7 +91,17 @@ public class PaymentService {
             booking.setStatus(Booking.BookingStatus.CONFIRMED);
             bookingRepository.save(booking);
         }
-        emailService.sendBookingConfirmation(booking);
+        String userEmail = booking.getUser().getEmail();
+        String pnr = booking.getPnr();
+        String trainName = booking.getTrain().getTrainName();
+        String trainNumber = booking.getTrain().getTrainNumber();
+        String source = booking.getTrain().getSourceStation();
+        String dest = booking.getTrain().getDestStation();
+        String date = booking.getJourneyDate().toString();
+        String classType = booking.getClassType();
+        String status = booking.getStatus().name();
+        String amount = booking.getTotalAmount().toString();
+        emailService.sendBookingConfirmation(userEmail, pnr, trainName, trainNumber, source, dest, date, classType, status, amount);
         log.info("Payment {} verified for booking {}", paymentId, booking.getId());
     }
 
