@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     defer-datasource-initialization: true   
     show-sql: false
     properties:
@@ -31,13 +31,13 @@ spring:
       mode: always
       data-locations: classpath:data.sql
 
-  #data:
-    #redis:
-      #url: ${REDIS_URL}
-      #timeout: 2000ms
+  data:
+    redis:
+      url: ${REDIS_URL}
+      timeout: 2000ms
 
   cache:
-    type: none
+    type: redis
     redis:
       time-to-live: 600000
 
