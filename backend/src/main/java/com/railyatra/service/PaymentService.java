@@ -32,7 +32,7 @@ public class PaymentService {
 
     @Value("${razorpay.key-secret}")
     private String razorpayKeySecret;
-
+    @Transactional
     public Map<String, Object> createRazorpayOrder(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new BookingException("Booking not found: " + bookingId));
