@@ -31,13 +31,13 @@ spring:
       mode: always
       data-locations: classpath:data.sql
 
-  data:
-    redis:
-      url: ${REDIS_URL}
-      timeout: 2000ms
+  #data:
+    #redis:
+      #url: ${REDIS_URL}
+      #timeout: 2000ms
 
   cache:
-    type: redis
+    type: none
     redis:
       time-to-live: 600000
 
