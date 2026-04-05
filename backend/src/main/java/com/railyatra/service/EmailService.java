@@ -18,7 +18,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    //@Async
+    @Async
     public void sendBookingConfirmation(Booking booking) {
         try {
             MimeMessage msg = mailSender.createMimeMessage();
@@ -33,7 +33,7 @@ public class EmailService {
         }
     }
 
-    //@Async
+    @Async
     public void sendWaitlistConfirmation(Booking booking) {
         try {
             MimeMessage msg = mailSender.createMimeMessage();
@@ -49,7 +49,7 @@ public class EmailService {
         }
     }
 
-    //@Async
+    @Async
     public void sendRefundNotification(Booking booking, BigDecimal refundAmount) {
         try {
             MimeMessage msg = mailSender.createMimeMessage();
