@@ -36,6 +36,7 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/trains/**").permitAll()
                 .requestMatchers("/api/bookings/pnr/**").permitAll()
                 .requestMatchers("/api/bookings/wl-predict").permitAll()
