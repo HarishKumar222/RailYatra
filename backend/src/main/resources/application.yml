@@ -2,9 +2,9 @@ spring:
   application:
     name: railyatra-backend
 
-   
+spring: 
   datasource:
-    url: ${DATABASE_URL}?sslmode=require
+    url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -35,7 +35,7 @@ spring:
 
   data:
     redis:
-      url: rediss://default:gQAAAAAAASC4AAIncDJhMTdlNjNlYWYwODE0NjQ4YjBkODViZTJhYmM2Y2IyYXAyNzM5MTI@quiet-minnow-73912.upstash.io:6379
+      url: ${REDIS_URL}
       timeout: 2000ms
 
   cache:
