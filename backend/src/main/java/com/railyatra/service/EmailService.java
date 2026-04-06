@@ -73,18 +73,21 @@ public class EmailService {
     }
 
     private void sendEmail(String to, String subject, String html) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(html, true);
-            mailSender.send(msg);
-            log.info("Email sent to {}", to);
-        } catch (Exception e) {
-            log.error("Email failed: {}", e.getMessage());
-        }
+    try {
+        MimeMessage msg = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+        helper.setTo(to);
+        helper.setFrom(System.getenv("MAIL_FROM") != null 
+            ? System.getenv("MAIL_FROM") 
+            : "narapureddygariharsish@gmail.com");
+        helper.setSubject(subject);
+        helper.setText(html, true);
+        mailSender.send(msg);
+        log.info("Email sent to {}", to);
+    } catch (Exception e) {
+        log.warn("Email failed: {}", e.getMessage());
     }
+}
 
     private String buildHtml(String pnr, String trainName, String trainNo,
                               String source, String dest, String date,
