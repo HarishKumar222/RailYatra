@@ -8,6 +8,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.railyatra.repository.BookingRepository;
 
 import jakarta.mail.internet.MimeMessage;
 import java.math.BigDecimal;
@@ -16,24 +17,25 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
-
+    private final BookingRepository bookingRepository;
     private final JavaMailSender mailSender;
 
-    @Async
-    @Transactional
-    public void sendBookingConfirmation(Booking booking) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
-            helper.setTo(booking.getUser().getEmail());
-            helper.setSubject("🚂 Booking Confirmed — PNR: " + booking.getPnr());
-            helper.setText(buildHtml(booking), true);
-            mailSender.send(msg);
-            log.info("Confirmation email sent for PNR: {}", booking.getPnr());
-        } catch (Exception e) {
-            log.error("Email send failed: {}", e.getMessage());
-        }
+@Async
+public void sendBookingConfirmation(Booking booking) {
+    try {
+        Booking b = bookingRepository.findById(booking.getId())
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        MimeMessage msg = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+        helper.setTo(b.getUser().getEmail());
+        helper.setSubject("🚂 Booking Confirmed — PNR: " + b.getPnr());
+        helper.setText(buildHtml(b), true);
+        mailSender.send(msg);
+        log.info("Confirmation email sent for PNR: {}", b.getPnr());
+    } catch (Exception e) {
+        log.error("Email send failed: {}", e.getMessage());
     }
+}
 
     @Async
     public void sendWaitlistConfirmation(Booking booking) {
