@@ -34,22 +34,28 @@ spring:
   data:
     redis:
       url: ${REDIS_URL}
-      timeout: 2000ms
+      timeout: 10000ms
+      connect-timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 3
+          min-idle: 0
+          max-idle: 3
 
   cache:
     type: redis
     redis:
       time-to-live: 600000
+      enable-statistics: false
 
   mail:
-    host: smtp.gmail.com
-    port: 465
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: smtp.sendgrid.net
+    port: 587
+    username: apikey
+    password: ${SENDGRID_API_KEY}
     properties:
       mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
-      mail.smtp.ssl.trust: smtp.gmail.com
+      mail.smtp.starttls.enable: true
 
   jackson:
     serialization:
