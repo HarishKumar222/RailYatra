@@ -48,14 +48,6 @@ spring:
       time-to-live: 600000
       enable-statistics: false
 
-  mail:
-    host: smtp.sendgrid.net
-    port: 587
-    username: apikey
-    password: ${SENDGRID_API_KEY}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
 
   jackson:
     serialization:
