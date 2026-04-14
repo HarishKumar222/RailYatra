@@ -1,13 +1,14 @@
 package com.railyatra.service;
 
 import com.railyatra.entity.Booking;
-import com.sendgrid.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import jakarta.mail.internet.MimeMessage;
 import java.math.BigDecimal;
 
 @Service
@@ -15,30 +16,27 @@ import java.math.BigDecimal;
 @Slf4j
 public class EmailService {
 
-    @Value("${SENDGRID_API_KEY}")
-    private String apiKey;
-
-    @Value("${MAIL_FROM}")
-    private String fromEmail;
+    private final JavaMailSender mailSender;
 
     @Async
     public void sendBookingConfirmation(Booking booking) {
         try {
-            sendEmail(
-                booking.getUser().getEmail(),
-                "🚂 Booking Confirmed — PNR: " + booking.getPnr(),
-                buildHtml(
-                    booking.getPnr(),
-                    booking.getTrain().getTrainName(),
-                    booking.getTrain().getTrainNumber(),
-                    booking.getTrain().getSourceStation(),
-                    booking.getTrain().getDestStation(),
-                    booking.getJourneyDate().toString(),
-                    booking.getClassType(),
-                    booking.getStatus().name(),
-                    booking.getTotalAmount().toString()
-                )
-            );
+            // Extract all values while session is still open
+            String email     = booking.getUser().getEmail();
+            String pnr       = booking.getPnr();
+            String trainName = booking.getTrain().getTrainName();
+            String trainNo   = booking.getTrain().getTrainNumber();
+            String source    = booking.getTrain().getSourceStation();
+            String dest      = booking.getTrain().getDestStation();
+            String date      = booking.getJourneyDate().toString();
+            String classType = booking.getClassType();
+            String status    = booking.getStatus().name();
+            String amount    = booking.getTotalAmount().toString();
+
+            sendEmail(email,
+                "🚂 Booking Confirmed — PNR: " + pnr,
+                buildHtml(pnr, trainName, trainNo, source, dest,
+                          date, classType, status, amount));
         } catch (Exception e) {
             log.error("Email send failed: {}", e.getMessage());
         }
@@ -46,53 +44,74 @@ public class EmailService {
 
     @Async
     public void sendWaitlistConfirmation(Booking booking) {
-        sendEmail(
-            booking.getUser().getEmail(),
-            "🎉 WL Confirmed! PNR: " + booking.getPnr(),
-            "<h2>Your waitlisted ticket is now CONFIRMED!</h2>"
-        );
+        try {
+            String email = booking.getUser().getEmail();
+            String pnr   = booking.getPnr();
+            String train = booking.getTrain().getTrainName();
+            sendEmail(email,
+                "🎉 WL Confirmed! PNR: " + pnr,
+                "<h2>Your waitlisted ticket is now CONFIRMED!</h2>" +
+                "<p>PNR: <strong>" + pnr + "</strong></p>" +
+                "<p>Train: " + train + "</p>");
+        } catch (Exception e) {
+            log.error("WL email failed: {}", e.getMessage());
+        }
     }
 
     @Async
     public void sendRefundNotification(Booking booking, BigDecimal refundAmount) {
-        sendEmail(
-            booking.getUser().getEmail(),
-            "💰 Refund Initiated — PNR: " + booking.getPnr(),
-            "<h2>Refund of ₹" + refundAmount + " initiated.</h2>"
-        );
-    }
-
-    private void sendEmail(String to, String subject, String html) {
         try {
-            Email from = new Email(fromEmail);
-            Email toEmail = new Email(to);
-            Content content = new Content("text/html", html);
-
-            Mail mail = new Mail(from, subject, toEmail, content);
-
-            SendGrid sg = new SendGrid(apiKey);
-            Request request = new Request();
-
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-
-            Response response = sg.api(request);
-
-            log.info("Email sent: status {}", response.getStatusCode());
-
+            String email = booking.getUser().getEmail();
+            String pnr   = booking.getPnr();
+            sendEmail(email,
+                "💰 Refund Initiated — PNR: " + pnr,
+                "<h2>Refund of ₹" + refundAmount + " initiated.</h2>" +
+                "<p>Reflects in 5-7 business days.</p>");
         } catch (Exception e) {
-            log.error("SendGrid API failed: {}", e.getMessage());
+            log.error("Refund email failed: {}", e.getMessage());
         }
     }
 
+    private void sendEmail(String to, String subject, String html) {
+    try {
+        MimeMessage msg = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+        helper.setTo(to);
+        helper.setFrom(System.getenv("MAIL_FROM") != null 
+            ? System.getenv("MAIL_FROM") 
+            : "narapureddygariharsish@gmail.com");
+        helper.setSubject(subject);
+        helper.setText(html, true);
+        mailSender.send(msg);
+        log.info("Email sent to {}", to);
+    } catch (Exception e) {
+        log.warn("Email failed: {}", e.getMessage());
+    }
+}
+
     private String buildHtml(String pnr, String trainName, String trainNo,
-                            String source, String dest, String date,
-                            String classType, String status, String amount) {
+                              String source, String dest, String date,
+                              String classType, String status, String amount) {
         return """
-            <h2>Booking Confirmed</h2>
-            <p>PNR: %s</p>
-            <p>Train: %s (%s)</p>
-            """.formatted(pnr, trainName, trainNo);
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+              <div style="background:#1a56db;padding:20px;color:white;text-align:center">
+                <h1>🚂 RailYatra</h1><h2>Booking Confirmed!</h2>
+              </div>
+              <div style="padding:20px;background:#f9fafb;border:1px solid #e5e7eb">
+                <p><strong>PNR:</strong>
+                   <span style="font-size:1.4em;color:#1a56db">%s</span></p>
+                <p><strong>Train:</strong> %s (%s)</p>
+                <p><strong>From:</strong> %s &rarr; <strong>To:</strong> %s</p>
+                <p><strong>Date:</strong> %s | <strong>Class:</strong> %s</p>
+                <p><strong>Status:</strong>
+                   <span style="color:green">%s</span></p>
+                <p><strong>Total Paid:</strong> ₹%s</p>
+                <hr/>
+                <p style="color:#6b7280;font-size:0.85em">
+                   Powered by RailYatra 🚀</p>
+              </div>
+            </div>
+            """.formatted(pnr, trainName, trainNo,
+                          source, dest, date, classType, status, amount);
     }
 }
